@@ -17,17 +17,36 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('mints token id 1 and can safeMint with empty data', async function () {
-    const h1 = await contract.write.mint([wallet.account.address, 1n]);
-    let r = await publicClient.waitForTransactionReceipt({ hash: h1 });
-    assert.equal(r.status, 'success');
+  it('mints a token', async function () {
+    const hash = await contract.write.mint([wallet.account.address, 1n]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
 
-    const h2 = await contract.write.safeMint([
+  it('safeMint with empty data', async function () {
+    const hash = await contract.write.safeMint([
       wallet.account.address,
       2n,
       '0x',
     ]);
-    r = await publicClient.waitForTransactionReceipt({ hash: h2 });
-    assert.equal(r.status, 'success');
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
+
+  it('safeMint with non-empty data', async function () {
+    const hash = await contract.write.safeMint([
+      wallet.account.address,
+      3n,
+      '0xdeadbeef',
+    ]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
+
+  it('minting same token id twice reverts', async function () {
+    await contract.write.mint([wallet.account.address, 100n]);
+    await assert.rejects(() =>
+      contract.write.mint([wallet.account.address, 100n]),
+    );
   });
 });
