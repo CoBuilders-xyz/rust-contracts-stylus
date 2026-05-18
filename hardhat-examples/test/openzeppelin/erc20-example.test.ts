@@ -21,17 +21,45 @@ describe('openzeppelin / erc20-example', async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('mints, then admin can pause / unpause', async function () {
-    const mintHash = await contract.write.mint([wallet.account.address, 100n]);
-    await publicClient.waitForTransactionReceipt({ hash: mintHash });
+  it('mints tokens', async function () {
+    const hash = await contract.write.mint([wallet.account.address, 100n]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
 
+  it('pause blocks further mints', async function () {
     const pauseHash = await contract.write.pause();
-    await publicClient.waitForTransactionReceipt({ hash: pauseHash });
+    const pauseRc = await publicClient.waitForTransactionReceipt({
+      hash: pauseHash,
+    });
+    assert.equal(pauseRc.status, 'success');
 
+    await assert.rejects(() =>
+      contract.write.mint([wallet.account.address, 1n]),
+    );
+  });
+
+  it('unpause re-enables mints', async function () {
     const unpauseHash = await contract.write.unpause();
-    const receipt = await publicClient.waitForTransactionReceipt({
+    const unpauseRc = await publicClient.waitForTransactionReceipt({
       hash: unpauseHash,
     });
-    assert.equal(receipt.status, 'success');
+    assert.equal(unpauseRc.status, 'success');
+
+    const mintHash = await contract.write.mint([wallet.account.address, 50n]);
+    const mintRc = await publicClient.waitForTransactionReceipt({
+      hash: mintHash,
+    });
+    assert.equal(mintRc.status, 'success');
+  });
+
+  it('double pause reverts', async function () {
+    await contract.write.pause();
+    await assert.rejects(() => contract.write.pause());
+    await contract.write.unpause();
+  });
+
+  it('unpause when not paused reverts', async function () {
+    await assert.rejects(() => contract.write.unpause());
   });
 });
