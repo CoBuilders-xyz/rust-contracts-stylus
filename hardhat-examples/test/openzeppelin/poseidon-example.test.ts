@@ -16,10 +16,21 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('Poseidon2 hash is stable for the same inputs', async function () {
+  it('Poseidon2 hash is deterministic', async function () {
     const h1 = await contract.read.hash([[3n, 9n]]);
     const h2 = await contract.read.hash([[3n, 9n]]);
     assert.equal(h1, h2);
     assert.notEqual(h1, 0n);
+  });
+
+  it('different inputs produce different hashes', async function () {
+    const h1 = await contract.read.hash([[1n, 2n]]);
+    const h2 = await contract.read.hash([[5n, 6n]]);
+    assert.notEqual(h1, h2);
+  });
+
+  it('hash(0, 0) returns a non-zero result', async function () {
+    const h = await contract.read.hash([[0n, 0n]]);
+    assert.notEqual(h, 0n);
   });
 });
