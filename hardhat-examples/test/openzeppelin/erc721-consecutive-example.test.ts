@@ -13,15 +13,31 @@ describe('openzeppelin / erc721-consecutive-example', async function () {
     ['[]', '[]', 1n, 100n],
   );
 
-  it('deploys', async function () {
+  it('deploys with consecutive mint constructor', async function () {
     assert.ok(contract.address);
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('extra mint uses a token id above the consecutive window', async function () {
+  it('mints a token above the consecutive window', async function () {
     const tokenId = 10_000n;
     const hash = await contract.write.mint([wallet.account.address, tokenId]);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     assert.equal(receipt.status, 'success');
+  });
+
+  it('minting same token id twice reverts', async function () {
+    const tokenId = 20_000n;
+    await contract.write.mint([wallet.account.address, tokenId]);
+    await assert.rejects(() =>
+      contract.write.mint([wallet.account.address, tokenId]),
+    );
+  });
+
+  it('mints multiple distinct tokens', async function () {
+    for (const id of [30_000n, 30_001n, 30_002n]) {
+      const hash = await contract.write.mint([wallet.account.address, id]);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      assert.equal(receipt.status, 'success');
+    }
   });
 });
