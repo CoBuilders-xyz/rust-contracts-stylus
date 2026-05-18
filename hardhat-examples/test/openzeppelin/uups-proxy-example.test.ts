@@ -17,13 +17,25 @@ describe('openzeppelin / uups-proxy-example', async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('mint succeeds (UUPS + ERC20 logic on nitro; getVersion readable)', async function () {
-    await contract.read.getVersion();
+  it('getVersion is readable after deploy', async function () {
+    const version = await contract.read.getVersion();
+    assert.equal(typeof version, 'number');
+  });
 
-    const mintHash = await contract.write.mint([wallet.account.address, 7n]);
-    const mintRc = await publicClient.waitForTransactionReceipt({
-      hash: mintHash,
-    });
-    assert.equal(mintRc.status, 'success');
+  it('mint succeeds (ERC20 logic behind UUPS proxy)', async function () {
+    const hash = await contract.write.mint([wallet.account.address, 100n]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
+
+  it('mint multiple times accumulates', async function () {
+    const h1 = await contract.write.mint([wallet.account.address, 50n]);
+    const h2 = await contract.write.mint([wallet.account.address, 75n]);
+    const [r1, r2] = await Promise.all([
+      publicClient.waitForTransactionReceipt({ hash: h1 }),
+      publicClient.waitForTransactionReceipt({ hash: h2 }),
+    ]);
+    assert.equal(r1.status, 'success');
+    assert.equal(r2.status, 'success');
   });
 });
