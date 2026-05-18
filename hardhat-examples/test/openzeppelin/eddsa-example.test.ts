@@ -16,8 +16,19 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('verify is callable on the deployed contract (returns bool)', async function () {
-    const ok = await contract.read.verify([[0n, 0n], [0n, 0n, 0n], '0x']);
-    assert.equal(typeof ok, 'boolean');
+  it('verify returns a boolean', async function () {
+    const result = await contract.read.verify([[0n, 0n], [0n, 0n, 0n], '0x']);
+    assert.equal(typeof result, 'boolean');
+  });
+
+  it('verify is deterministic for same inputs', async function () {
+    const args: [[bigint, bigint], [bigint, bigint, bigint], `0x${string}`] = [
+      [1n, 2n],
+      [3n, 4n, 5n],
+      '0xdeadbeef',
+    ];
+    const r1 = await contract.read.verify(args);
+    const r2 = await contract.read.verify(args);
+    assert.equal(r1, r2);
   });
 });
