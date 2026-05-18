@@ -17,14 +17,23 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('mint and burn on tracked supply', async function () {
-    const id = 8n;
-    await publicClient.waitForTransactionReceipt({
-      hash: await contract.write.mint([wallet.account.address, id, 1000n]),
-    });
-    const r = await publicClient.waitForTransactionReceipt({
-      hash: await contract.write.burn([wallet.account.address, id, 1n]),
-    });
-    assert.equal(r.status, 'success');
+  it('mints tokens for a given id', async function () {
+    const hash = await contract.write.mint([wallet.account.address, 1n, 1000n]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
+
+  it('burns tokens and tracks supply', async function () {
+    await contract.write.mint([wallet.account.address, 2n, 500n]);
+    const hash = await contract.write.burn([wallet.account.address, 2n, 100n]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
+
+  it('burn reverts on insufficient balance', async function () {
+    await contract.write.mint([wallet.account.address, 3n, 5n]);
+    await assert.rejects(() =>
+      contract.write.burn([wallet.account.address, 3n, 999n]),
+    );
   });
 });
