@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'node:child_process';
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,8 +16,7 @@ if (!existsSync(contractsDir)) {
   process.exit(1);
 }
 
-const examplesReal = realpathSync(contractsDir);
-const names = discoverExamples(examplesReal)
+const names = discoverExamples(contractsDir)
   .map((p) => p.packageName)
   .filter(Boolean);
 

@@ -1,11 +1,11 @@
 {
   "name": "openzeppelin-stylus-hardhat-examples",
   "private": true,
-  "description": "Hardhat project: compile and test OpenZeppelin Stylus examples (contracts/ links to ../examples)",
+  "description": "Hardhat project: compile and test OpenZeppelin Stylus examples (contracts/ is a generated copy of ../examples)",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/hardhat-ensure-contracts-link.mjs",
-    "prepare:hardhat": "node scripts/hardhat-prepare-examples.mjs",
+    "prepare:hardhat": "node scripts/hardhat-ensure-contracts-link.mjs && node scripts/hardhat-prepare-examples.mjs",
     "compile": "npm run prepare:hardhat && hardhat arb:compile --stylus --host",
     "compile:ci": "npm run compile:all",
     "compile:all": "npm run prepare:hardhat && node scripts/hardhat-compile-all-examples.mjs",

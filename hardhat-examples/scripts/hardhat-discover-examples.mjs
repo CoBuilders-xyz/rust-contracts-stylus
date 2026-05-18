@@ -1,5 +1,5 @@
 /**
- * Example crates live under hardhat-examples/contracts (symlink → ../examples).
+ * Example crates live under hardhat-examples/contracts (generated from ../examples).
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
