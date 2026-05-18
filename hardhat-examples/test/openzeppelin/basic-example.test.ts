@@ -15,12 +15,25 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     'OZB',
   ]);
 
-  it('deploys and mints on-chain (export-abi exposes mint)', async function () {
+  it('deploys on the stylus test node', async function () {
     assert.ok(contract.address);
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
+  });
 
-    const hash = await contract.write.mint([wallet.account.address, 42n]);
+  it('mints tokens to an account', async function () {
+    const hash = await contract.write.mint([wallet.account.address, 1000n]);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     assert.equal(receipt.status, 'success');
+  });
+
+  it('mints multiple times (cumulative)', async function () {
+    const h1 = await contract.write.mint([wallet.account.address, 500n]);
+    const h2 = await contract.write.mint([wallet.account.address, 500n]);
+    const [r1, r2] = await Promise.all([
+      publicClient.waitForTransactionReceipt({ hash: h1 }),
+      publicClient.waitForTransactionReceipt({ hash: h2 }),
+    ]);
+    assert.equal(r1.status, 'success');
+    assert.equal(r2.status, 'success');
   });
 });
