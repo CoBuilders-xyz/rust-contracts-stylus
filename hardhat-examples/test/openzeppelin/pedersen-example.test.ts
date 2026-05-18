@@ -16,12 +16,23 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('hash(uint256[2]) view returns deterministic value', async function () {
+  it('hash is deterministic for same inputs', async function () {
     const a = 123456789n;
     const b = 987654321n;
     const h1 = await contract.read.hash([[a, b]]);
     const h2 = await contract.read.hash([[a, b]]);
     assert.equal(h1, h2);
     assert.notEqual(h1, 0n);
+  });
+
+  it('different inputs produce different hashes', async function () {
+    const h1 = await contract.read.hash([[1n, 2n]]);
+    const h2 = await contract.read.hash([[3n, 4n]]);
+    assert.notEqual(h1, h2);
+  });
+
+  it('hash(0, 0) returns a non-zero result', async function () {
+    const h = await contract.read.hash([[0n, 0n]]);
+    assert.notEqual(h, 0n);
   });
 });
