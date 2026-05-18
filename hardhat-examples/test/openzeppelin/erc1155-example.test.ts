@@ -17,23 +17,47 @@ describe(`openzeppelin / ${CONTRACT}`, async function () {
     assert.equal(await publicClient.getChainId(), STYLUS_LOCAL_CHAIN_ID);
   });
 
-  it('mints single id then batch on-chain', async function () {
-    const h1 = await contract.write.mint([
+  it('mints a single token id', async function () {
+    const hash = await contract.write.mint([
       wallet.account.address,
       1n,
       100n,
       '0x',
     ]);
-    let r = await publicClient.waitForTransactionReceipt({ hash: h1 });
-    assert.equal(r.status, 'success');
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
 
-    const h2 = await contract.write.mintBatch([
+  it('mintBatch mints multiple ids in one tx', async function () {
+    const hash = await contract.write.mintBatch([
       wallet.account.address,
-      [2n, 3n],
-      [10n, 20n],
+      [10n, 11n, 12n],
+      [50n, 60n, 70n],
       '0x',
     ]);
-    r = await publicClient.waitForTransactionReceipt({ hash: h2 });
-    assert.equal(r.status, 'success');
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
+  });
+
+  it('mintBatch reverts on array length mismatch', async function () {
+    await assert.rejects(() =>
+      contract.write.mintBatch([
+        wallet.account.address,
+        [1n, 2n],
+        [100n],
+        '0x',
+      ]),
+    );
+  });
+
+  it('mint with non-empty data succeeds', async function () {
+    const hash = await contract.write.mint([
+      wallet.account.address,
+      99n,
+      1n,
+      '0xcafebabe',
+    ]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    assert.equal(receipt.status, 'success');
   });
 });
